@@ -1,0 +1,20 @@
+services:
+  local-postgresql-service:
+    container_name: local-postgresql
+    image: postgres:16.2-alpine
+    environment:
+      POSTGRES_USER: postgres_user
+      POSTGRES_PASSWORD: pass123
+      POSTGRES_DB: local-db
+    ports:
+      - "5432:5432"
+    volumes:
+      - local-postgres-volume:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres_user -d local-db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  local-postgres-volume:
