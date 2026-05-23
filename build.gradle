@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     id 'org.jetbrains.kotlin.jvm' version "2.3.21"
     id "org.jetbrains.kotlin.plugin.allopen" version "2.3.21"
@@ -14,7 +16,6 @@ dependencies {
     implementation 'io.quarkus:quarkus-rest'
     implementation 'io.quarkus:quarkus-rest-jackson'
     implementation 'io.quarkus:quarkus-kotlin'
-    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
     implementation 'io.quarkus:quarkus-arc'
     implementation 'io.quarkus:quarkus-smallrye-jwt'
     implementation 'io.quarkus:quarkus-reactive-pg-client'
@@ -49,10 +50,14 @@ allOpen {
 }
 
 compileKotlin {
-    kotlinOptions.jvmTarget = JavaVersion.VERSION_25
-    kotlinOptions.javaParameters = true
+    compilerOptions {
+        jvmTarget = JvmTarget.JVM_25
+        javaParameters = true
+    }
 }
 
 compileTestKotlin {
-    kotlinOptions.jvmTarget = JavaVersion.VERSION_25
+    compilerOptions {
+        jvmTarget = JvmTarget.JVM_25
+    }
 }
