@@ -39,3 +39,10 @@ nb-configuration.xml
 /.quarkus/cli/plugins/
 # TLS Certificates
 .certs/
+
+# JWT keys
+src/main/resources/privateKey.pem
+src/main/resources/publicKey.pem
+
+# Local application config overrides
+application.properties.local
