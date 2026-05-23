@@ -35,24 +35,13 @@ openssl rsa -in src/main/resources/privateKey.pem -pubout -out src/main/resource
 
 Both files are git-ignored and must be provisioned on every environment.
 
-### 3. Start PostgreSQL 18
-
-```bash
-docker run \
-  -e POSTGRES_DB=tinto \
-  -e POSTGRES_USER=tinto \
-  -e POSTGRES_PASSWORD=tinto \
-  -p 5432:5432 \
-  postgres:18-alpine
-```
-
-### 4. Run in dev mode
+### 3. Run in dev mode
 
 ```bash
 ./gradlew quarkusDev
 ```
 
-Flyway runs automatically on startup and applies any pending migrations.
+Quarkus Dev Services automatically starts a `postgres:18-alpine` container on the first run — no manual Docker setup needed. Flyway applies migrations on startup.
 
 ## API
 
@@ -83,6 +72,16 @@ All vendor endpoints require `Authorization: Bearer <token>`.
 |--------|------|-------------|
 | `GET` | `/vendors?q=cafes&name=<query>` | Search vendors by type and name |
 | `GET` | `/vendors/cafes` | List all cafes |
+
+## Generating a dev JWT token
+
+To test authenticated endpoints locally without going through Google/Apple:
+
+```bash
+./gradlew generateToken
+```
+
+Copy the printed token and use it as `Authorization: Bearer <token>` in your HTTP client.
 
 ## Running Tests
 

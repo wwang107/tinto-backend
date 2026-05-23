@@ -1,0 +1,34 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version "2.3.21"
+}
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+dependencies {
+    // Pull in the Quarkus BOM so versions align with the main project
+    implementation enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}")
+    // Access to all main project classes and its full runtime classpath
+    implementation project(':')
+    // Explicitly declare deps that are 'implementation' (not exported) in the main project
+    implementation 'io.smallrye:smallrye-jwt-build'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
+}
+
+compileKotlin {
+    kotlinOptions.jvmTarget = JavaVersion.VERSION_25
+    kotlinOptions.javaParameters = true
+}
+
+task generateToken(type: JavaExec, group: 'development', description: 'Generate a dev JWT token for local testing') {
+    // Use compiled scripts classes + full runtime classpath of the main project
+    classpath = files(sourceSets.main.output) + project(':').sourceSets.main.runtimeClasspath
+    mainClass = 'tinto.dev.GenerateTokenKt'
+    systemProperty 'projectDir', rootProject.projectDir
+}

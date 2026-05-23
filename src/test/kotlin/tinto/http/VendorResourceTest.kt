@@ -14,24 +14,7 @@ import tinto.PostgresTestResource
 class VendorResourceTest {
 
     @Test
-    fun `GET vendors cafes returns 401 without authentication`() {
-        given()
-            .`when`().get("/vendors/cafes")
-            .then()
-            .statusCode(401)
-    }
-
-    @Test
-    fun `GET vendors returns 401 without authentication`() {
-        given()
-            .`when`().get("/vendors?q=cafes")
-            .then()
-            .statusCode(401)
-    }
-
-    @Test
-    @TestSecurity(user = "test-user")
-    fun `GET vendors cafes returns all cafes`() {
+    fun `GET vendors cafes is public and returns all cafes`() {
         given()
             .`when`().get("/vendors/cafes")
             .then()
@@ -40,8 +23,7 @@ class VendorResourceTest {
     }
 
     @Test
-    @TestSecurity(user = "test-user")
-    fun `GET vendors with q=cafes returns all cafes`() {
+    fun `GET vendors with q=cafes is public and returns all cafes`() {
         given()
             .`when`().get("/vendors?q=cafes")
             .then()
@@ -50,7 +32,6 @@ class VendorResourceTest {
     }
 
     @Test
-    @TestSecurity(user = "test-user")
     fun `GET vendors with name filter returns matching cafes`() {
         given()
             .`when`().get("/vendors?q=cafes&name=bean")
@@ -61,7 +42,6 @@ class VendorResourceTest {
     }
 
     @Test
-    @TestSecurity(user = "test-user")
     fun `GET vendors with name filter is case insensitive`() {
         given()
             .`when`().get("/vendors?q=cafes&name=DAILY")
@@ -72,7 +52,6 @@ class VendorResourceTest {
     }
 
     @Test
-    @TestSecurity(user = "test-user")
     fun `GET vendors with unknown type returns empty list`() {
         given()
             .`when`().get("/vendors?q=restaurants")
@@ -82,8 +61,16 @@ class VendorResourceTest {
     }
 
     @Test
+    fun `POST vendors cafes returns 401 without authentication`() {
+        given()
+            .`when`().post("/vendors/cafes")
+            .then()
+            .statusCode(401)
+    }
+
+    @Test
     @TestSecurity(user = "test-user")
-    fun `POST vendors cafes returns 204`() {
+    fun `POST vendors cafes returns 204 when authenticated`() {
         given()
             .`when`().post("/vendors/cafes")
             .then()

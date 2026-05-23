@@ -14,7 +14,6 @@ import kotlinx.coroutines.delay
 import java.io.InputStream
 import java.nio.charset.StandardCharsets
 
-@Authenticated
 @Path("/vendors")
 class VendorResource {
 
@@ -53,6 +52,7 @@ class VendorResource {
     }
 
     @POST
+    @Authenticated
     @Path("cafes")
     @Produces(MediaType.APPLICATION_JSON)
     fun createCafes() {
