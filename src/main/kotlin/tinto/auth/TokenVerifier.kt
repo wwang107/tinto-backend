@@ -1,10 +1,10 @@
 package tinto.auth
 
+import com.google.auth.oauth2.TokenVerifier as GoogleAuthTokenVerifier
+import jakarta.annotation.PostConstruct
 import jakarta.enterprise.context.ApplicationScoped
+import jakarta.inject.Inject
 import org.eclipse.microprofile.config.inject.ConfigProperty
-import org.jose4j.jwk.HttpsJwks
-import org.jose4j.jwt.consumer.JwtConsumerBuilder
-import org.jose4j.keys.resolvers.HttpsJwksVerificationKeyResolver
 
 data class ProviderClaims(
     val sub: String,
@@ -12,34 +12,60 @@ data class ProviderClaims(
     val name: String?,
 )
 
+interface TokenVerifier {
+    fun verify(provider: String, token: String): ProviderClaims
+}
+
 @ApplicationScoped
-class TokenVerifier(
-    @ConfigProperty(name = "tinto.auth.google.client-id") private val googleClientId: String,
-    @ConfigProperty(name = "tinto.auth.apple.client-id") private val appleClientId: String,
-) {
-    private val googleJwks = HttpsJwks("https://www.googleapis.com/oauth2/v3/certs")
-    private val appleJwks = HttpsJwks("https://appleid.apple.com/auth/keys")
+class GoogleTokenVerifier {
 
-    fun verify(provider: String, idToken: String): ProviderClaims {
-        val (jwks, clientId, issuer) = when (provider.uppercase()) {
-            "GOOGLE" -> Triple(googleJwks, googleClientId, "https://accounts.google.com")
-            "APPLE"  -> Triple(appleJwks, appleClientId, "https://appleid.apple.com")
-            else -> throw IllegalArgumentException("Unsupported provider: $provider")
-        }
+    @ConfigProperty(name = "tinto.auth.google.client-id")
+    lateinit var clientId: String
 
-        val keyResolver = HttpsJwksVerificationKeyResolver(jwks)
-        val claims = JwtConsumerBuilder()
-            .setVerificationKeyResolver(keyResolver)
-            .setExpectedAudience(clientId)
-            .setExpectedIssuer(issuer)
-            .setRequireExpirationTime()
+    private lateinit var verifier: GoogleAuthTokenVerifier
+
+    @PostConstruct
+    fun init() {
+        verifier = GoogleAuthTokenVerifier.newBuilder()
+            .setAudience(clientId)
+            .setIssuer("https://accounts.google.com")
             .build()
-            .processToClaims(idToken)
+    }
 
+    fun verify(token: String): ProviderClaims {
+        val jws = try {
+            verifier.verify(token)
+        } catch (e: GoogleAuthTokenVerifier.VerificationException) {
+            throw IllegalArgumentException("Invalid or expired Google ID token", e)
+        }
+        val payload = jws.payload
         return ProviderClaims(
-            sub = claims.subject,
-            email = claims.getStringClaimValue("email") ?: error("Missing email claim"),
-            name = claims.getStringClaimValue("name"),
+            sub = payload.subject,
+            email = payload["email"] as String,
+            name = payload["name"] as? String,
         )
+    }
+}
+
+@ApplicationScoped
+class AppleTokenVerifier {
+    fun verify(token: String): ProviderClaims {
+        TODO("Not yet implemented")
+    }
+}
+
+@ApplicationScoped
+class TokenVerifierDispatcher : TokenVerifier {
+
+    @Inject
+    lateinit var googleVerifier: GoogleTokenVerifier
+
+    @Inject
+    lateinit var appleVerifier: AppleTokenVerifier
+
+    override fun verify(provider: String, token: String): ProviderClaims = when (provider.uppercase()) {
+        "GOOGLE" -> googleVerifier.verify(token)
+        "APPLE" -> appleVerifier.verify(token)
+        else -> throw IllegalArgumentException("Unknown provider: $provider")
     }
 }
